@@ -1,13 +1,15 @@
 import * as HTTPStatus from 'http-status'
+import * as jwt from 'jwt-simple'
 import {app, request, expect} from './config/helpers'
 const model = require('../../models')
+const config = require('../../config/env/config')()
 
 describe('Teste de Integração', ()=>{
 
     'use strict'
-    const config = require('../../config/env/config')
 
     let id
+    let token
 
     const userTest = {
         id: 100,
@@ -17,10 +19,10 @@ describe('Teste de Integração', ()=>{
     }
 
     const userDefault = {
-        id: 101,
-        name: 'User Default',
-        email: 'email@default.com',
-        password: '654321'
+        id: 1,
+        name: 'Vinicius',
+        email: 'email@email.com',
+        password: '123'
     }
 
     beforeEach((done) => {
@@ -33,20 +35,54 @@ describe('Teste de Integração', ()=>{
         .then(user => {
           model.User.create(userTest)
             .then(() => {
-              done();
+                token = jwt.encode({id: user.id}, config.secret)
+                done();
             })
         })
       });
+
+    describe('POST /token', () => {
+        it('Deve receber um JWT', done=>{
+            const credentials = {
+                email: userDefault.email,
+                password: userDefault.password
+            }
+            request(app)
+                .post('/token')
+                .send(credentials)
+                .end((error, res)=>{
+                    expect(res.status).to.be.equal(HTTPStatus.OK)
+                    expect(res.body.token).to.be.equal(`${token}`)
+                    done(error)
+                })
+        })
+        it('Não deve gerar um JWT', done=>{
+            const credentials = {
+                email: 'aa@aa.com',
+                password: 'aaaa'
+            }
+            request(app)
+                .post('/token')
+                .send(credentials)
+                .end((error, res)=>{
+                    expect(res.status).to.be.equal(HTTPStatus.UNAUTHORIZED)
+                    expect(res.body).to.empty
+                    done(error)
+                })
+        })
+    })
 
     describe('GET /api/users/all', ()=>{
         it('Deve retornar JSON com todos os usuários', done=>{
             request(app)
                 .get('/api/users/all')
+                .set('Content-Type', 'application/json')
+                .set('Authorization', `JWT ${token}`)
                 .end((error, res)=>{
                     expect(res.status).to.equal(HTTPStatus.OK)
                     expect(res.body.payload).to.be.an('array')
-                    expect(res.body.payload[0].name).to.be.equal(userDefault.name)
-                    expect(res.body.payload[0].email).to.be.equal(userDefault.email)
+                    expect(res.body.payload[0].name).to.be.equal(userTest.name)
+                    expect(res.body.payload[0].email).to.be.equal(userTest.email)
                     done(error)
                 })
         })
@@ -55,6 +91,8 @@ describe('Teste de Integração', ()=>{
         it('Deve retornar JSON com um usuários', done=>{
             request(app)
                 .get(`/api/users/${userDefault.id}`)
+                .set('Content-Type', 'application/json')
+                .set('Authorization', `JWT ${token}`)
                 .end((error, res)=>{
                     expect(res.status).to.equal(HTTPStatus.OK)
                     done(error)
@@ -71,6 +109,8 @@ describe('Teste de Integração', ()=>{
             }
             request(app)
                 .post(`/api/users/create`)
+                .set('Content-Type', 'application/json')
+                .set('Authorization', `JWT ${token}`)
                 .send(user)
                 .end((error, res)=>{
                     expect(res.status).to.equal(HTTPStatus.OK)
@@ -87,6 +127,8 @@ describe('Teste de Integração', ()=>{
             }
             request(app)
                 .put(`/api/users/${1}/update`)
+                .set('Content-Type', 'application/json')
+                .set('Authorization', `JWT ${token}`)
                 .send(user)
                 .end((error, res)=>{
                     expect(res.status).to.equal(HTTPStatus.OK)
@@ -98,6 +140,8 @@ describe('Teste de Integração', ()=>{
         it('Deve deletar um usuários', done=>{
             request(app)
                 .delete(`/api/users/${1}/destroy`)
+                .set('Content-Type', 'application/json')
+                .set('Authorization', `JWT ${token}`)
                 .end((error, res)=>{
                     expect(res.status).to.equal(HTTPStatus.OK)
                     done(error)

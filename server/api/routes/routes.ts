@@ -1,22 +1,20 @@
-import {Application, Request, Response} from 'express';
+import {Application, Request, Response} from 'express'
 import UserRoutes from '../../modules/User/routes'
+import TokenRoutes from '../../modules/Auth/auth'
 
 class Routes {
  
-    private router: UserRoutes;
-
-    constructor(app: Application){
-        this.router = new UserRoutes();
-        this.getRoutes(app);
+    constructor(){
     }
 
-    getRoutes(app: Application): void{
-        app.route('/api/users/all').get(this.router.index);
-        app.route('/api/users/create').post(this.router.create);
-        app.route('/api/users/:id').get(this.router.findOne);
-        app.route('/api/users/:id/update').put(this.router.update);
-        app.route('/api/users/:id/destroy').delete(this.router.destroy);
+    initRoutes(app: Application, auth: any): void{
+        app.route('/api/users/all').all(auth.config().authenticate()).get(UserRoutes.index)
+        app.route('/api/users/create').all(auth.config().authenticate()).post(UserRoutes.create)
+        app.route('/api/users/:id').all(auth.config().authenticate()).get(UserRoutes.findOne)
+        app.route('/api/users/:id/update').all(auth.config().authenticate()).put(UserRoutes.update)
+        app.route('/api/users/:id/destroy').all(auth.config().authenticate()).delete(UserRoutes.destroy)
+        app.route('/token').post(TokenRoutes.auth)
     }
 }
 
-export default Routes;
+export default new Routes()

@@ -3,7 +3,7 @@
         "target": "es5",
         "lib": ["es5", "es6", "dom"],
         "module": "commonjs",
-        "outDir": "build",
+        "outDir": "dist",
         "typeRoots": [
             "../node_modules/@types"
         ],
