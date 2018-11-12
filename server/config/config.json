@@ -4,20 +4,20 @@
     "password": "root",
     "database": "ts_api_test",
     "host": "localhost",
-    "dialect": "s3cr3t"
+    "dialect": "postgres"
   },
   "test": {
     "username": "postgres",
     "password": "root",
     "database": "ts_api_test",
     "host": "localhost",
-    "dialect": "s3cr3t"
+    "dialect": "postgres"
   },
   "production": {
     "username": "postgres",
     "password": "root",
     "database": "ts_api_test",
     "host": "localhost",
-    "dialect": "s3cr3t"
+    "dialect": "postgres"
   }
 }
