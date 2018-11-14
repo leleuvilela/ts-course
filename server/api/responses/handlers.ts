@@ -1,8 +1,11 @@
 import { Request, Response, ErrorRequestHandler, NextFunction } from 'express'
 import * as HTTPStatus from 'http-status'
-import * as jwt from 'jwt-simple'
+import * as jwt from 'jsonwebtoken'
 import * as bcrypt from 'bcrypt'
+import { decode } from 'punycode';
+const hal = require('hal');
 const config = require('../../config/env/config')()
+const tokenList = {}
 
 class Handlers {
 
@@ -14,10 +17,37 @@ class Handlers {
         const isMatch = bcrypt.compareSync(credentials.password, data.password)
 
         if (isMatch) {
-            const payload = { id: data.id }
-            res.json({
-                token: jwt.encode(payload, config.secret)
-            })
+            const payload = {
+                    id: data.id
+                }
+            const response = {
+                status: "Logged in",
+                token: jwt.sign(payload, config.secret, { expiresIn: config.expTokenTime }),
+                refreshToken:jwt.sign(payload, config.secret, { expiresIn: config.expRefreshTokenTime })
+            }
+            tokenList[response.refreshToken] = response
+            res.json(response)
+        } else {
+            res.sendStatus(HTTPStatus.UNAUTHORIZED)
+        }
+    }
+
+    authRefresh(res: Response, credentials) {
+        
+        if((credentials.refreshToken) && (credentials.refreshToken in tokenList)) {
+            try { 
+                const decoded:any = jwt.verify(credentials.refreshToken, config.secret)
+                const payload = {
+                        id: decoded.id
+                    }
+                const response = {
+                    token: jwt.sign(payload, config.secret, { expiresIn: config.expTokenTime })
+                }
+                tokenList[credentials.refreshToken] = response
+                res.json(response)
+            } catch (err){
+                res.sendStatus(HTTPStatus.UNAUTHORIZED)
+            }
         } else {
             res.sendStatus(HTTPStatus.UNAUTHORIZED)
         }
@@ -29,7 +59,12 @@ class Handlers {
     }
 
     onSuccess(res: Response, data: any) {
-        res.status(HTTPStatus.OK).json({ payload: data });
+        var resource = new hal.Resource({ atual: 1, total: 10}, '/data');
+        resource.embed("payload", data)
+        resource.link('fist', '/1/first');
+        resource.link('last', '/1/last');
+        resource.link('next', '/1/next');
+        res.status(HTTPStatus.OK).json(resource.toJSON());
     }
 
     errorHandlerApi(err: ErrorRequestHandler, req: Request, res: Response, next: NextFunction) {

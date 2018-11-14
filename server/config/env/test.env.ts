@@ -8,5 +8,8 @@ module.exports = {
     serverPort: 3000,
     pgPort: 5432,
     dbUrl: 'postgres://postgres:root@localhost:5432/ts-api-test',
-    secret: 's3cr3t'
+    secret: 's3cr3t',
+    session: false,
+    expTokenTime: '1m',
+    expRefreshTokenTime: '10m'
 }

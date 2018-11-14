@@ -18,7 +18,8 @@ class User implements IUser {
 
     getAll(): Bluebird<IUser[]>{
         return model.User.findAll({
-            order: ['name']
+            order: ['name'],
+            offset: 1,10:10
         }).then(createUsers)
     }
 

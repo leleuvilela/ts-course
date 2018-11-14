@@ -20,8 +20,8 @@ describe('Testes de Integração', () => {
 
   const userDefault = {
     id: 1,
-    name: 'Raphael',
-    email: 'raphael@email.com',
+    name: 'Vinicius',
+    email: 'email@email.com',
     password: '123'
   };
 

@@ -7,13 +7,14 @@ var basename  = path.basename(module.filename);
 var config    = require('../config/env/config')();
 var env       = config.env || 'development';
 var db : any  = {};
+const modelRelations = require('./relations/relations');
 
 if (config.dbURL) {
   var sequelize = new Sequelize(config.dbURL);
 } else {
   var sequelize = new Sequelize(config.db, config.user, config.password, {host: config.host, dialect: config.dialect});
 }
-console.log(__dirname)
+
 fs
   .readdirSync(__dirname)
   .filter(function(file) {
@@ -34,5 +35,7 @@ Object.keys(db).forEach(function(modelName) {
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
+
+modelRelations(db);
 
 module.exports = db;
